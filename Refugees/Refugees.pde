@@ -1,6 +1,12 @@
 import processing.pdf.*;
 import de.bezier.data.*;
+import processing.serial.*;
 
+/* Serial Parameter */
+int MJMACPort =11;
+Serial myPort;                       // The serial port
+
+/* Extract data from files */
 XlsReader reader;
 //String[][]RefugeeData = null;
 int  numData= 1180;
