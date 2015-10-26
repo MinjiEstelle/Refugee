@@ -1,7 +1,31 @@
-/*-----( Import needed libraries )-----*/
-#include <Wire.h>  // Comes with Arduino IDE
-#include <LiquidCrystal_I2C.h>
-/* Ethernet libraries */
+/*
+ Arduino --> ThingSpeak Channel via Ethernet
+ The ThingSpeak Client sketch is designed for the Arduino and Ethernet.
+ This sketch updates a channel feed with an analog input reading via the
+ ThingSpeak API (https://thingspeak.com/docs)
+ using HTTP POST. The Arduino uses DHCP and DNS for a simpler network setup.
+ The sketch also includes a Watchdog / Reset function to make sure the
+ Arduino stays connected and/or regains connectivity after a network outage.
+ Use the Serial Monitor on the Arduino IDE to see verbose network feedback
+ and ThingSpeak connectivity status.
+ Getting Started with ThingSpeak:
+   * Sign Up for New User Account - https://thingspeak.com/users/new
+   * Create a new Channel by selecting Channels and then Create New Channel
+   * Enter the Write API Key in this sketch under "ThingSpeak Settings"
+ Arduino Requirements:
+   * Arduino with Ethernet Shield or Arduino Ethernet
+   * Arduino 1.0+ IDE
+  Network Requirements:
+   * Ethernet port on Router
+   * DHCP enabled on Router
+   * Unique MAC Address for Arduino
+ Created: October 17, 2011 by Hans Scharler (http://www.nothans.com)
+ Additional Credits:
+ Example sketches from Arduino team, Ethernet by Adrian McEwen
+ Updated: June 29, 2015 by Bongjun Hur
+ changed some code for new WIZnet W5500 Ethernet Shield.
+*/
+
 #include <SPI.h>
 #include <Ethernet.h>
 
@@ -18,8 +42,8 @@ IPAddress myDns(8, 8, 8, 8); // google puble dns
 
 // ThingSpeak Settings
 char thingSpeakAddress[] = "api.thingspeak.com";
-String thingtweetAPIKey = "3D36TDZW24OK50Q7";
-String writeAPIKey = "V2NMXONRQE7DUNC5";
+String thingtweetAPIKey = "EB3Y29H84J0Y0JJX";
+String writeAPIKey = "7LB4EFGN14ECC3ZT";
 const int updateThingSpeakInterval = 16 * 1000;      // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
 
 // Variable Setup
@@ -35,94 +59,56 @@ void startEthernet();
 void updateThingSpeak(String tsData);
 void updateTwitterStatus(String tsData);
 
-/*-----( Declare Constants )-----*/
-/*-----( Declare objects )-----*/
-// set the LCD address to 0x27 for a 16 chars 2 line display
-// A FEW use address 0x3F
-// Set the pins on the I2C chip used for LCD connections:
-//                    addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
-
-/*-----( Declare Variables )-----*/
-//NONE
-
-void setup()   /*----( SETUP: RUNS ONCE )----*/
+void setup()
 {
-  Serial.begin(9600);  // Used to type in characters
-  lcd.begin(16,2);   // initialize the lcd for 16 chars 2 lines, turn on backlight 
-  startEthernet();  // Start Ethernet on Arduino
+    // Start Serial for debugging on the Serial Monitor
+    Serial.begin(9600);
 
-//-------- Write characters on the display ------------------
-// NOTE: Cursor Position: (CHAR, LINE) start at 0  
-  lcd.setCursor(0,0); //Start at character 4 on line 0
-  lcd.print("Syrian Refugees");
-  delay(500);
-  lcd.setCursor(0,1);
-  lcd.print("Route 1988-2013");
-  delay(500);  
+    // Start Ethernet on Arduino
+    startEthernet();
+}
 
-// Wait and then tell user they can start the Serial Monitor and type in characters to
-// Display. (Set Serial Monitor option to "No Line Ending")
-  lcd.clear();
-  lcd.setCursor(0,0); //Start at character 0 on line 0
-  lcd.print("Countries & Refu");
-  lcd.setCursor(0,1);
-  lcd.print("gee population");  
-}/*--(end setup )---*/
-
-
-void loop()   /*----( LOOP: RUNS CONSTANTLY )----*/
+void loop()
 {
-  int nRefugeeData;
-  String sRefugeeData;
-    // when characters arrive over the serial port...
-    if (Serial.available()) {
-      // wait a bit for the entire message to arrive
-      delay(100);
-      // clear the screen
-      lcd.clear();
-      // read all the available characters
-      while (Serial.available() > 0) {
-        // display each character to the LCD
-        nRefugeeData = Serial.read();
-        sRefugeeData = String(nRefugeeData, DEC);
-        //lcd.write(Serial.read());
-        lcd.write(nRefugeeData);
-      }
+
+    // Read value from Analog Input Pin 0
+    int photocellReading; // the analog reading from the analog resistor divider
+    photocellReading = Serial.read();
+    String analogValue0 = String(photocellReading, DEC);
+
+    
+    // Print Update Response to Serial Monitor
+    if (client.available()) {
+        char c = client.read();
+        Serial.print(c);
     }
-    else{
-      // Print Update Response to Serial Monitor
-      if (client.available()) {
-          char c = client.read();
-          Serial.print(c);
-      }
-  
-      // Disconnect from ThingSpeak
-      if (!client.connected() && lastConnected) {
-          Serial.println("...disconnected");
-          Serial.println();
-          client.stop();
-      }
-  
-      // Update ThingSpeak
-      if(!client.connected() && (millis() - lastConnectionTime > updateThingSpeakInterval)) {
-         // Serial.println("field1="+analogValue0);
-         // updateThingSpeak("field1="+analogValue0);
-          // Update Twitter via ThingTweet
-          String tweetmsg = "Syrian Refugee Route and Population ";
-          tweetmsg += sRefugeeData;
-          tweetmsg += " @GoldsmithsUoL @designdotgold @IxdGold @thingspeak";
-          updateTwitterStatus(tweetmsg);
-      }
-  
-      // Check if Arduino Ethernet needs to be restarted
-      if (failedCounter > 3 ) {
-          startEthernet();
-      }
-      lastConnected = client.connected();
-  }
 
-}/* --(end main loop )-- */
+    // Disconnect from ThingSpeak
+    if (!client.connected() && lastConnected) {
+        Serial.println("...disconnected");
+        Serial.println();
+        client.stop();
+    }
+
+    // Update ThingSpeak
+    if(!client.connected() && (millis() - lastConnectionTime > updateThingSpeakInterval)) {
+       // Serial.println("field1="+analogValue0);
+       // updateThingSpeak("field1="+analogValue0);
+        // Update Twitter via ThingTweet
+        String tweetmsg = "Syrian Refugee Route and Population ";
+        tweetmsg += analogValue0;
+        tweetmsg += " @WiznetTeam @thingspeak";
+        updateTwitterStatus(tweetmsg);
+
+    }
+
+    // Check if Arduino Ethernet needs to be restarted
+    if (failedCounter > 3 ) {
+        startEthernet();
+    }
+
+    lastConnected = client.connected();
+}
 
 void startEthernet()
 {
@@ -240,6 +226,3 @@ void updateTwitterStatus(String tsData)
         lastConnectionTime = millis();
     }
 }
-/* ( THE END ) */
-
-
