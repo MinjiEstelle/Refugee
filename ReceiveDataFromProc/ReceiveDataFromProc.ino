@@ -18,8 +18,8 @@ IPAddress myDns(8, 8, 8, 8); // google puble dns
 
 // ThingSpeak Settings
 char thingSpeakAddress[] = "api.thingspeak.com";
-String thingtweetAPIKey = "3D36TDZW24OK50Q7";
-String writeAPIKey = "V2NMXONRQE7DUNC5";
+String thingtweetAPIKey = "GQDPH4QJKXKB37TI";
+String writeAPIKey = "FFMJBK2396TA8B1D";
 const int updateThingSpeakInterval = 16 * 1000;      // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
 
 // Variable Setup
@@ -56,10 +56,10 @@ void setup()   /*----( SETUP: RUNS ONCE )----*/
 // NOTE: Cursor Position: (CHAR, LINE) start at 0  
   lcd.setCursor(0,0); //Start at character 4 on line 0
   lcd.print("Syrian Refugees");
-  delay(500);
+  delay(300);
   lcd.setCursor(0,1);
   lcd.print("Route 1988-2013");
-  delay(500);  
+  delay(300);  
 
 // Wait and then tell user they can start the Serial Monitor and type in characters to
 // Display. (Set Serial Monitor option to "No Line Ending")
@@ -73,34 +73,21 @@ void setup()   /*----( SETUP: RUNS ONCE )----*/
 
 void loop()   /*----( LOOP: RUNS CONSTANTLY )----*/
 {
+  int i=0;
   int nRefugeeData;
   String sRefugeeData;
     // when characters arrive over the serial port...
-    if (Serial.available()) {
-      // wait a bit for the entire message to arrive
-      delay(100);
-      // clear the screen
-      lcd.clear();
-      // read all the available characters
-      while (Serial.available() > 0) {
-        // display each character to the LCD
-        nRefugeeData = Serial.read();
-        sRefugeeData = String(nRefugeeData, DEC);
-        //lcd.write(Serial.read());
-        lcd.write(nRefugeeData);
-      }
-    }
-    else{
+      
       // Print Update Response to Serial Monitor
       if (client.available()) {
           char c = client.read();
-          Serial.print(c);
+          //Serial.print(
       }
   
       // Disconnect from ThingSpeak
       if (!client.connected() && lastConnected) {
-          Serial.println("...disconnected");
-          Serial.println();
+          //Serial.println("...disconnected");
+          //Serial.println();
           client.stop();
       }
   
@@ -109,10 +96,24 @@ void loop()   /*----( LOOP: RUNS CONSTANTLY )----*/
          // Serial.println("field1="+analogValue0);
          // updateThingSpeak("field1="+analogValue0);
           // Update Twitter via ThingTweet
-          String tweetmsg = "Syrian Refugee Route and Population ";
-          tweetmsg += sRefugeeData;
-          tweetmsg += " @GoldsmithsUoL @designdotgold @IxdGold @thingspeak";
-          updateTwitterStatus(tweetmsg);
+          if (Serial.available()) {
+          // wait a bit for the entire message to arrive
+          delay(100);
+          // clear the screen
+          lcd.clear();
+          // read all the available characters
+          while (Serial.available() > 0) {
+              // display each character to the LCD
+              
+              //lcd.write(Serial.read()); 
+              sRefugeeData = Serial.readString();
+              lcd.print(sRefugeeData); 
+              String tweetmsg = "Syrian Refugee Route and Population "+ sRefugeeData;
+              tweetmsg += " @IxdGold";
+              updateTwitterStatus(tweetmsg);     
+               
+            }     
+          }       
       }
   
       // Check if Arduino Ethernet needs to be restarted
@@ -120,7 +121,6 @@ void loop()   /*----( LOOP: RUNS CONSTANTLY )----*/
           startEthernet();
       }
       lastConnected = client.connected();
-  }
 
 }/* --(end main loop )-- */
 
@@ -128,8 +128,8 @@ void startEthernet()
 {
     client.stop();
 
-    Serial.println("Connecting Arduino to network...");
-    Serial.println();
+    //Serial.println("Connecting Arduino to network...");
+    //Serial.println();
 
     delay(1000);
 
@@ -142,11 +142,11 @@ void startEthernet()
     if (Ethernet.begin(mac) == 0)
 #endif
     {
-        Serial.println("DHCP Failed, reset Arduino to try again");
-        Serial.println();
+        //Serial.println("DHCP Failed, reset Arduino to try again");
+        //Serial.println();
     } else {
-        Serial.println("Arduino connected to network using DHCP");
-        Serial.println();
+        //Serial.println("Arduino connected to network using DHCP");
+        //Serial.println();
     }
 #else
 #if defined(WIZ550io_WITH_MACADDRESS) // Use assigned MAC address of WIZ550io
@@ -154,8 +154,8 @@ void startEthernet()
 #else
     Ethernet.begin(mac, ip, myDns, gateway, subnet);
 #endif
-    Serial.println("Arduino connected to network using Static IP : ");
-    Serial.println(Ethernet.localIP());
+   // Serial.println("Arduino connected to network using Static IP : ");
+    //Serial.println(Ethernet.localIP());
 #endif
 
     delay(1000);
@@ -178,22 +178,22 @@ void updateThingSpeak(String tsData)
         lastConnectionTime = millis();
 
         if (client.connected()) {
-            Serial.println("Connecting to ThingSpeak...");
-            Serial.println();
+            //Serial.println("Connecting to ThingSpeak...");
+            //Serial.println();
 
             failedCounter = 0;
         } else {
             failedCounter++;
 
-            Serial.println("Connection to ThingSpeak failed ("+String(failedCounter, DEC)+")");
-            Serial.println();
+            //Serial.println("Connection to ThingSpeak failed ("+String(failedCounter, DEC)+")");
+            //Serial.println();
         }
 
     } else {
         failedCounter++;
 
-        Serial.println("Connection to ThingSpeak Failed ("+String(failedCounter, DEC)+")");
-        Serial.println();
+        //Serial.println("Connection to ThingSpeak Failed ("+String(failedCounter, DEC)+")");
+        //Serial.println();
 
         lastConnectionTime = millis();
     }
@@ -220,22 +220,22 @@ void updateTwitterStatus(String tsData)
         lastConnectionTime = millis();
 
         if (client.connected()) {
-            Serial.println("Connecting to ThingSpeak...");
-            Serial.println();
+            //Serial.println("Connecting to ThingSpeak...");
+            //Serial.println();
 
             failedCounter = 0;
         } else {
             failedCounter++;
 
-            Serial.println("Connection to ThingSpeak failed ("+String(failedCounter, DEC)+")");
-            Serial.println();
+            //Serial.println("Connection to ThingSpeak failed ("+String(failedCounter, DEC)+")");
+            //Serial.println();
         }
 
     } else {
         failedCounter++;
 
-        Serial.println("Connection to ThingSpeak Failed ("+String(failedCounter, DEC)+")");
-        Serial.println();
+        //Serial.println("Connection to ThingSpeak Failed ("+String(failedCounter, DEC)+")");
+        //Serial.println();
 
         lastConnectionTime = millis();
     }

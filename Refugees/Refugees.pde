@@ -21,7 +21,7 @@ int time;
 PImage worldMap;
 void setup() {
   
-  size(1200, 600);
+  size(1250,630);
   reader = new XlsReader( this, "countryNames.xls");
   reader.nextRow();
   worldMap = loadImage("worldMap.png");
@@ -29,7 +29,8 @@ void setup() {
   noStroke();
   frameRate(30);
   smooth();
-
+  String portName = Serial.list()[MJMACPort];
+  myPort = new Serial(this, portName, 9600);
   time = millis();
   getRefugeesData();
   getSortData();
@@ -38,12 +39,12 @@ void draw(){
 
     //reader = new XlsReader( this, "countryNames.xls");
     textAlign(CENTER);
-    textSize(40);
-    fill(200,200,200);
-    text ("Refugees's routing 1988-2013L Total" + TotalnumOfRefugee, 500, 550);
+    textSize(28);
+    fill(235,235,235);
+    text (TotalnumOfRefugee, 1100,557);
     noStroke();
     fill(0);
-    textSize(9);
+    textSize(10);
     
     reader.hasMoreRows();
    // while (reader.hasMoreRows()){
@@ -63,49 +64,51 @@ void draw(){
               //reader.nextCell();
               //reader.nextCell();
               //float dim = map(reader.getInt(), 0, 1330044000, 3, 15);
-              textSize(10);
+              textSize(11);
 
               if (placeName.equals(ActualData[i][0]))
               {
                   println(i + ":placeName " + placeName + " Refegee " + ActualData[i][0]);
-                  fill(200, 200, 200);
+                  fill(290, 290, 290);
+                  textLeading(14);
                   text(placeName + "\n(" + ActualData[i][1] +")", x, y);  //the number of refugees
-                  delay(700);
-                  fill(200, 200, 200, 10);
+                   //myPort.write(placeName + ":" + ActualData[i][1]);
+                  delay(600);
+                  fill(255, 255, 255);
                   float f = new Float(ActualData[i][1]);
                   if (f <= 10)
                   {
-                    fill(126, 198, 32,30);
-                    ellipse(x, y, 10, 10);
+                    fill(130,130,130,80);
+                    ellipse(x, y, 40,40);
                   }
                   else if ((10<= f) && (f < 100))
                   {
-                    fill(32, 183, 198,40);
-                    ellipse(x, y, 20, 20);
+                    fill(255,102,13,80);
+                    ellipse(x, y, 45, 45);
                   }
-                  else if ((100<= f) && (f < 1000))
+                  else if ((100<= f) && (f < 500))
                   {
-                    fill(32, 77, 198,50);
-                    ellipse(x, y, 40, 40);
+                    fill(85,130,0,60);
+                    ellipse(x, y,48,48);
                   }
-                  else if ((1000<= f) && (f < 5000))
+                  else if ((500<= f) && (f <3000))
                   {
-                    fill(153, 32, 198,60);
+                    fill(255,8,57,60);
                     ellipse(x, y, 60, 60);
                   }
-                  else if ((5000<= f) && (f < 10000))
+                  else if ((3000<= f) && (f < 10000))
                   {
-                    fill(198, 32, 171,70);
-                    ellipse(x, y, 80, 80);
+                    fill(232,234,130,70);
+                    ellipse(x, y, 70,70);
                   }
                   else
                   {
-                    fill(198, 32, 32, 80);
-                    ellipse(x, y, 100, 100);
+                    fill(77,1,0,70);
+                    ellipse(x, y,80,80);
                   }
                   //ellipse(x, y, 50, 50);
                   //println(placeName);
-                  
+                  myPort.write(placeName + ":" + ActualData[i][1]);
               }
               else{
                 fill(200,200,200, 0);

@@ -42,8 +42,8 @@ IPAddress myDns(8, 8, 8, 8); // google puble dns
 
 // ThingSpeak Settings
 char thingSpeakAddress[] = "api.thingspeak.com";
-String thingtweetAPIKey = "EB3Y29H84J0Y0JJX";
-String writeAPIKey = "7LB4EFGN14ECC3ZT";
+String thingtweetAPIKey = "3D36TDZW24OK50Q7";
+String writeAPIKey = "V2NMXONRQE7DUNC5";
 const int updateThingSpeakInterval = 16 * 1000;      // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
 
 // Variable Setup
